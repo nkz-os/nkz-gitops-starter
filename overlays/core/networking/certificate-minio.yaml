@@ -1,0 +1,23 @@
+# =============================================================================
+# TLS certificate for MinIO public S3 API ({{MINIO_DOMAIN}})
+# =============================================================================
+# Preconditions:
+# - DNS A/AAAA record for {{MINIO_DOMAIN}} points to the cluster ingress.
+# - Apply after ClusterIssuer letsencrypt-prod exists.
+# =============================================================================
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: minio-tls
+  namespace: nekazari
+spec:
+  secretName: minio-tls
+  duration: 2160h
+  renewBefore: 360h
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: {{MINIO_DOMAIN}}
+  dnsNames:
+    - {{MINIO_DOMAIN}}

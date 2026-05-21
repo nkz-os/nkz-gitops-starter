@@ -1,0 +1,54 @@
+# Production ConfigMaps for core services.
+# Each ConfigMap holds production URLs/env vars for one service.
+# Deployments in nkz/k8s/core/services/ source from these via configMapKeyRef.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: core-agrienergy-config
+  namespace: nekazari
+data:
+  CORS_ORIGINS: '["https://{{FRONTEND_DOMAIN}}"]'
+  KEYCLOAK_URL: "https://{{KEYCLOAK_DOMAIN}}/auth"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: core-intelligence-config
+  namespace: nekazari
+data:
+  CORS_ORIGINS: '["https://{{FRONTEND_DOMAIN}}"]'
+  KEYCLOAK_URL: "https://{{KEYCLOAK_DOMAIN}}/auth"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: core-tenant-user-api-config
+  namespace: nekazari
+data:
+  CORS_ORIGINS: "https://{{FRONTEND_DOMAIN}},https://{{API_DOMAIN}}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: core-timeseries-reader-config
+  namespace: nekazari
+data:
+  KEYCLOAK_URL: "https://{{KEYCLOAK_DOMAIN}}"
+  KEYCLOAK_HOSTNAME: "{{KEYCLOAK_DOMAIN}}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: core-zulip-messaging-config
+  namespace: nekazari
+data:
+  external-host: "{{ZULIP_DOMAIN}}"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: core-static-assets-config
+  namespace: nekazari
+data:
+  STATIC_ASSETS_URL: "https://{{FRONTEND_DOMAIN}}/assets"

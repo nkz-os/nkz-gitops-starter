@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catastro-sp-config
+  namespace: nekazari
+  labels:
+    app: catastro-sp-backend
+    module: catastro-spain
+data:
+  KEYCLOAK_URL: "https://{{KEYCLOAK_DOMAIN}}/auth"

@@ -1,0 +1,18 @@
+# BioOrchestrator config is applied manually, not synced by ArgoCD.
+# This app exists only to track the production manifests in git.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bioorchestrator-config
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/nkz-os/gitops-config
+    targetRevision: HEAD
+    path: overlays/modules/bioorchestrator
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nekazari
+  syncPolicy:
+    automated: {}

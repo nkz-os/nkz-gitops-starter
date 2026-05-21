@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-host
+  namespace: nekazari
+  labels:
+    app: frontend-host
+    layer: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend-host
+  template:
+    metadata:
+      labels:
+        app: frontend-host
+    spec:
+      containers:
+      - name: host
+        image: ghcr.io/nkz-os/nkz/host:latest
+        imagePullPolicy: Always
+        env:
+        - name: COMPANY_URL
+          value: "https://{{YOUR_DOMAIN}}"
+        - name: COMPANY_NAME
+          value: "{{COMPANY_NAME}}"
+        - name: SUPPORT_EMAIL
+          value: "{{ADMIN_EMAIL}}"
+        - name: SALES_EMAIL
+          value: "{{ADMIN_EMAIL}}"
+        - name: PARTNERS_JSON
+          value: '[{"name":"{{COMPANY_NAME}}","url":"https://{{YOUR_DOMAIN}}/","logo":"/modules/assets/logo-robotika.svg"},{"name":"Biosasun","url":"https://biosasun.eu/","logo":"/modules/assets/logo-biosasun.png"},{"name":"Allotarra","url":"https://allotarra.eu/","logo":"/modules/assets/logo-allotarra.webp"},{"name":"Artotxiki","url":"https://artotxiki.com/","logo":"/modules/assets/logo-artotxiki.png"}]'
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "300m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-host-service
+  namespace: nekazari
+spec:
+  selector:
+    app: frontend-host
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
