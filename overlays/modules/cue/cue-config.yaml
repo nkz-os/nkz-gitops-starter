@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cue-config
+  namespace: nekazari
+  labels:
+    app: cue-backend
+    module: cue
+data:
+  KEYCLOAK_URL: "https://{{KEYCLOAK_DOMAIN}}/auth"

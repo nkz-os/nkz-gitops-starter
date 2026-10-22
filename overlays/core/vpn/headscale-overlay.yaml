@@ -1,0 +1,118 @@
+# Production Headscale configuration — served from private gitops-config repo.
+# Corresponding public files in nkz/k8s/vpn/ have YOUR_VPN_DOMAIN placeholders.
+# The headscale ArgoCD app excludes: 02-headscale-config.yaml, 04-headscale-ingress.yaml, 04-subnet-router.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: headscale-config
+  namespace: nekazari
+  labels:
+    app: headscale
+    component: config
+data:
+  config.yaml: |
+    server_url: https://{{VPN_DOMAIN}}
+    unix_socket: /var/lib/headscale/headscale.sock
+    listen_addr: 0.0.0.0:8080
+    grpc_listen_addr: 0.0.0.0:50443
+    grpc_allow_insecure: false
+    metrics_listen_addr: 0.0.0.0:9090
+    database:
+      type: postgres
+      postgres:
+        host: postgresql-service
+        port: 5432
+        name: headscale
+        user: headscale
+        max_open_conns: 10
+        max_idle_conns: 5
+        conn_max_idle_time_secs: 3600
+    private_key_path: /var/lib/headscale/private.key
+    noise:
+      private_key_path: /var/lib/headscale/noise_private.key
+    prefixes:
+      v4: 100.64.0.0/10
+      allocation: sequential
+    derp:
+      server:
+        enabled: false
+      urls:
+        - https://controlplane.tailscale.com/derpmap/default
+      auto_update_enabled: true
+      update_frequency: 24h
+    acls_policy_path: /etc/headscale/acls.hujson
+    dns:
+      magic_dns: false
+      base_domain: sdn.nekazari.internal
+    ephemeral_node_inactivity_timeout: 30m
+    node_update_check_interval: 10s
+    log:
+      level: info
+      format: text
+    disable_check_updates: true
+  acls.hujson: |
+    {
+      "tagOwners": {
+        "tag:field-device":  ["autogroup:admin"],
+        "tag:cluster-router": ["autogroup:admin", "cluster-infra"]
+      },
+      "groups": {
+        "group:subnet-routers": ["cluster-infra"]
+      },
+      "acls": [
+        {
+          "action": "accept",
+          "src":    ["group:subnet-routers"],
+          "dst":    ["10.43.0.0/16:*"]
+        },
+        {
+          "action": "accept",
+          "src":    ["tag:field-device"],
+          "dst":    ["tag:cluster-router:7447", "group:subnet-routers:7447"]
+        },
+        {
+          "action": "accept",
+          "src":    ["tag:field-device"],
+          "dst":    ["tag:cluster-router:1883", "group:subnet-routers:1883"]
+        }
+      ]
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: subnet-router-config
+  namespace: nekazari
+data:
+  login_server: "https://{{VPN_DOMAIN}}"
+  extra_args: "--login-server=https://{{VPN_DOMAIN}} --snat-subnet-routes=false --accept-routes=false"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: headscale-ingress
+  namespace: nekazari
+  labels:
+    app: headscale
+    component: vpn-control-plane
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - {{VPN_DOMAIN}}
+      secretName: vpn-tls
+  rules:
+    - host: {{VPN_DOMAIN}}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: headscale-service
+                port:
+                  name: http

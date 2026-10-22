@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-config
+  namespace: nekazari
+  labels:
+    app: backup-api
+    module: backup
+data:
+  CORS_ORIGINS: "https://{{FRONTEND_DOMAIN}}"
+  KEYCLOAK_URL: "https://{{KEYCLOAK_DOMAIN}}/auth"
+  JWT_ISSUER: "https://{{KEYCLOAK_DOMAIN}}/auth/realms/nekazari"
+  JWKS_URL: "https://{{KEYCLOAK_DOMAIN}}/auth/realms/nekazari/protocol/openid-connect/certs"

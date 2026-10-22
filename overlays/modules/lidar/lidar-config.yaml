@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lidar-config
+  namespace: nekazari
+  labels:
+    app: lidar-api
+    module: lidar
+data:
+  KEYCLOAK_URL: "https://{{KEYCLOAK_DOMAIN}}/auth"
+  JWT_ISSUER: "https://{{KEYCLOAK_DOMAIN}}/auth/realms/nekazari"
+  JWKS_URL: "https://{{KEYCLOAK_DOMAIN}}/auth/realms/nekazari/protocol/openid-connect/certs"
+  TILESET_PUBLIC_URL: "https://{{API_DOMAIN}}/api/lidar/tilesets"
+  MINIO_PUBLIC_BASE_URL: "https://{{MINIO_DOMAIN}}"
+  CORS_ORIGINS: "https://{{FRONTEND_DOMAIN}},https://{{API_DOMAIN}}"
